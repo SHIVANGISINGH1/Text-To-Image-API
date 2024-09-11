@@ -33,7 +33,7 @@ export default function Page() {
     if (savedLogs) {
       setLogs(JSON.parse(savedLogs));
     }
-  }, []);
+  }, [imageUrl]);
 
   // Handle pagination change
   const handlePaginationChange = (page) => {
