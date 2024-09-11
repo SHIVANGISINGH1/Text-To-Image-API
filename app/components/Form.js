@@ -43,7 +43,7 @@ export default function Form({ setImageUrl, setHistory }) {
       // Update history
       const newHistory = JSON.parse(localStorage.getItem("history")) || [];
       newHistory.unshift({
-        id: new Date().toISOString(), // Use ISO timestamp as ID
+        id: new Date().toISOString(),
         prompt: prompt,
         imageUrl: imageUrl,
         timestamp: new Date().toISOString(),
@@ -51,7 +51,6 @@ export default function Form({ setImageUrl, setHistory }) {
       localStorage.setItem("history", JSON.stringify(newHistory));
       setHistory(newHistory);
 
-      // Log success
       saveLog("Image generated successfully", "success");
     } catch (error) {
       console.error("Error generating image:", error);
