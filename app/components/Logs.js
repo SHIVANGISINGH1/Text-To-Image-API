@@ -1,9 +1,19 @@
-import { NextResponse } from "next/server";
+import { Box, Typography } from "@mui/material";
 
-export async function POST(request) {
-  const { logMessage, status } = await request.json();
-
-  console.log(`Log Status: ${status}, Message: ${logMessage}`);
-
-  return NextResponse.json({ success: true });
+export default function Logs({ logs }) {
+  return (
+    <Box mt={4}>
+      <Typography variant="h6" gutterBottom>
+        Logs
+      </Typography>
+      {logs.map((log, index) => (
+        <Box
+          key={index}
+          sx={{ color: log.status === "error" ? "red" : "green" }}
+        >
+          {log.timestamp}: {log.message}
+        </Box>
+      ))}
+    </Box>
+  );
 }

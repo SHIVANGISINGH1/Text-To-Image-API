@@ -1,17 +1,10 @@
-import { getLogs } from "../generate/route.js";
+// app/api/logs/route.js
+import { NextResponse } from "next/server";
 
-export async function GET() {
-  try {
-    const logs = await getLogs();
-    console.log("ss", logs);
-    return new Response(JSON.stringify(logs), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: "Error fetching logs" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+export async function POST(request) {
+  const { logMessage, status } = await request.json();
+
+  console.log(`Log Status: ${status}, Message: ${logMessage}`);
+
+  return NextResponse.json({ success: true });
 }

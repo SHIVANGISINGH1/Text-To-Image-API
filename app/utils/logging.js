@@ -1,3 +1,4 @@
+// app/utils/logging.js
 export function saveLog(logMessage, status) {
   const logs = JSON.parse(localStorage.getItem("logs")) || [];
   logs.push({

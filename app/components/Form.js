@@ -3,8 +3,9 @@
 import { useState } from "react";
 import axios from "axios";
 import { TextField, Button, Box } from "@mui/material";
+import { saveLog } from "../utils/logging";
 
-export default function Form({ onImageGenerated }) {
+export default function Form({ setImageUrl, setHistory }) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -37,9 +38,25 @@ export default function Form({ onImageGenerated }) {
         }
       );
       const imageUrl = response.data.result[0];
-      onImageGenerated(imageUrl);
+      setImageUrl(imageUrl);
+
+      // Update history
+      const newHistory = JSON.parse(localStorage.getItem("history")) || [];
+      newHistory.unshift({
+        id: new Date().toISOString(), // Use ISO timestamp as ID
+        prompt: prompt,
+        imageUrl: imageUrl,
+        timestamp: new Date().toISOString(),
+      });
+      localStorage.setItem("history", JSON.stringify(newHistory));
+      setHistory(newHistory);
+
+      // Log success
+      saveLog("Image generated successfully", "success");
     } catch (error) {
       console.error("Error generating image:", error);
+
+      saveLog("Error generating image: " + error.message, "error");
     } finally {
       setLoading(false);
     }

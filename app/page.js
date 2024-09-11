@@ -1,219 +1,114 @@
+// pages.js
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { saveLog, getLogs } from "./utils/logging";
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  Button,
+  CardContent,
+} from "@mui/material";
+import { format } from "date-fns";
+import Form from "./components/Form";
+import Logs from "./components/Logs";
 
-export default function HomePage() {
-  const [prompt, setPrompt] = useState("");
-  const [image, setImage] = useState(null);
-  const [logs, setLogs] = useState(getLogs());
-  const [history, setHistory] = useState(getLogs());
+const PAGE_SIZE = 5;
 
+export default function Page() {
+  const [imageUrl, setImageUrl] = useState("");
+  const [history, setHistory] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
+  // Load history and logs from localStorage on component mount
   useEffect(() => {
-    setLogs(getLogs());
-  }, [image, history]);
-
-  const handleGenerateImage = async () => {
-    if (!prompt.trim()) {
-      saveLog("Prompt cannot be empty", "error");
-      return;
+    const savedHistory = localStorage.getItem("history");
+    if (savedHistory) {
+      setHistory(JSON.parse(savedHistory));
     }
 
-    try {
-      const response = await axios.post(
-        "https://api.magicapi.dev/api/v1/bridgeml/text-to-image/text-to-image",
-        {
-          prompt,
-          height: 1024,
-          width: 1024,
-          scheduler: "K_EULER",
-          num_outputs: 1,
-          guidance_scale: 0,
-          negative_prompt: "worst quality, low quality",
-          num_inference_steps: 4,
-        },
-        {
-          headers: {
-            accept: "application/json",
-            "x-magicapi-key": process.env.NEXT_PUBLIC_IMAGE_API_KEY,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      setImage(response.data.result[0]);
-      setHistory((prevHistory) => [
-        ...prevHistory,
-        { prompt, imageUrl: response.data.result[0] },
-      ]);
-      saveLog("Image generated successfully", "success");
-    } catch (error) {
-      saveLog("Error generating image: " + error.message, "error");
+    const savedLogs = localStorage.getItem("logs");
+    if (savedLogs) {
+      setLogs(JSON.parse(savedLogs));
     }
+  }, []);
+
+  // Handle pagination change
+  const handlePaginationChange = (page) => {
+    setCurrentPage(page);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentHistory = history.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(history.length / itemsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+  // Calculate paginated history
+  const paginatedHistory = history.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ textAlign: "center", color: "#333" }}>Text-to-Image App</h1>
+    <Box padding={2}>
+      <Typography variant="h4" gutterBottom>
+        Text-to-Image Generator
+      </Typography>
 
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Enter prompt"
-          style={{
-            padding: "10px",
-            width: "300px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-          }}
-        />
-        <button
-          onClick={handleGenerateImage}
-          style={{
-            padding: "10px",
-            marginLeft: "10px",
-            borderRadius: "5px",
-            border: "none",
-            backgroundColor: "#eb344f",
-            color: "#fff",
-          }}
-        >
-          Generate Image
-        </button>
-      </div>
+      <Form
+        setImageUrl={setImageUrl}
+        setHistory={setHistory}
+        setLogs={setLogs}
+      />
 
-      <div style={{ marginBottom: "20px", textAlign: "center" }}>
-        {image && (
-          <div>
-            <h2>Generated Image</h2>
-            <img
-              src={image}
-              alt="Generated"
-              style={{
-                width: "100%",
-                maxWidth: "600px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-              }}
-            />
-          </div>
-        )}
-      </div>
+      {imageUrl && (
+        <Box mb={4}>
+          <Typography variant="h6" gutterBottom>
+            Generated Image
+          </Typography>
+          <img src={imageUrl} alt="Generated" style={{ maxWidth: "100%" }} />
+        </Box>
+      )}
 
-      <div style={{ marginBottom: "20px" }}>
-        <h2>History</h2>
-        {currentHistory.length > 0 ? (
-          <div style={{ display: "flex", flexWrap: "wrap" }}>
-            {currentHistory.map((entry, index) => (
-              <div
-                key={index}
-                style={{
-                  margin: "10px",
-                  textAlign: "center",
-                  flex: "1 0 200px",
-                  boxSizing: "border-box",
-                }}
-              >
-                <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
-                  {entry.prompt}
-                </p>
+      <Box mb={4}>
+        <Typography variant="h6" gutterBottom>
+          History
+        </Typography>
+        <Grid container spacing={2}>
+          {paginatedHistory.map((item) => (
+            <Grid item xs={12} sm={6} md={4} key={item.id}>
+              <Card>
                 <img
-                  src={entry.imageUrl}
-                  alt={`History ${index}`}
-                  style={{
-                    width: "150px",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "10px",
-                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                  }}
+                  src={item.imageUrl}
+                  alt={item.prompt}
+                  style={{ width: "100%" }}
                 />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ textAlign: "center", color: "#666" }}>
-            No history available
-          </p>
-        )}
-
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
+                <CardContent>
+                  <Typography variant="body1">{item.prompt}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {format(new Date(item.timestamp), "yyyy-MM-dd HH:mm:ss")}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+        <Box mt={2} display="flex" justifyContent="space-between">
+          <Button
+            variant="outlined"
+            onClick={() => handlePaginationChange(currentPage - 1)}
             disabled={currentPage === 1}
-            style={{
-              padding: "10px",
-              margin: "5px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              backgroundColor: "#eb344f",
-              color: "#fff",
-            }}
           >
             Previous
-          </button>
-          <span style={{ margin: "0 10px" }}>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            style={{
-              padding: "10px",
-              margin: "5px",
-              borderRadius: "5px",
-              border: "1px solid #ccc",
-              backgroundColor: "#eb344f",
-              color: "#fff",
-            }}
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => handlePaginationChange(currentPage + 1)}
+            disabled={paginatedHistory.length < PAGE_SIZE}
           >
             Next
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
 
-      <div>
-        <h2>Logs</h2>
-        {logs.length > 0 ? (
-          <div>
-            {logs.map((log, index) => (
-              <div
-                key={index}
-                style={{
-                  color: log.status === "error" ? "red" : "green",
-                  marginBottom: "5px",
-                  padding: "5px",
-                  borderRadius: "5px",
-                  border: `1px solid ${
-                    log.status === "error" ? "red" : "green"
-                  }`,
-                  backgroundColor: "#f9f9f9",
-                }}
-              >
-                {log.timestamp}: {log.message}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p style={{ textAlign: "center", color: "#666" }}>
-            No logs available
-          </p>
-        )}
-      </div>
-    </div>
+      <Logs logs={logs} />
+    </Box>
   );
 }
