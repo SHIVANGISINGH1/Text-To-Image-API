@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-Link:- https://text-to-image-api-rbxy-fa398uebu-eatbittechgmailcoms-projects.vercel.app/
+Link:- [https://text-to-image-api-rbxy-fa398uebu-eatbittechgmailcoms-projects.vercel.app/](https://text-to-image-api-ywpq-gv7szk6t0-eatbittechgmailcoms-projects.vercel.app/)
 
 Add the repository locally using:- 
 
